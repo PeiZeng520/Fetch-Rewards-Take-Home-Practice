@@ -1,9 +1,10 @@
 --Assume Fetch’s power users are defined based on the following dimensions:
 --1-	Frequency of purchases: how often the user makes purchases that captured via receipts. High purchase frequency indicates a habit of using Fetch for nearly every shopping trip.
 --2-	Number of receipts scanned: the total volume of receipts the user has scanned (or a monthly average). A power user will have a receipt count far above median. 
---3-	Total points earned and points redeemed: this metric shows how a user is realizing value from Fetch.
---4-	Referral activity: power users often share the app with friends and family.
---5-	Engagement with promotions and special offers: number of offer impressions or clicks and offers redemption by user. Power users should have a high participation rate in these activities.
+--3-    Active duration: Longer duration with frequent activities indeticate a user forms a habit to involve Fetch before or after shopping. These users should be considered as Power users also.
+--4-	Total points earned and points redeemed: this metric shows how a user is realizing value from Fetch.
+--5-	Referral activity: power users often share the app with friends and family.
+--6-	Engagement with promotions and special offers: number of offer impressions or clicks and offers redemption by user. Power users should have a high participation rate in these activities.
 --Key metrics for power user profiling:
 --1.	User usages and behavior: use duration; receipt scan frequency, etc.
 --2.	Consumer behavior: frequently visited store; frequently purchased items, etc.
