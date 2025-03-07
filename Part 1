@@ -1,0 +1,152 @@
+import pandas as pd
+import numpy as np
+import re
+
+# File paths
+products_path = "path\PRODUCTS_TAKEHOME.csv"
+transactions_path = "path\TRANSACTION_TAKEHOME.csv"
+users_path = "path\USER_TAKEHOME.csv"
+
+# Load datasets
+products_df = pd.read_csv(products_path)
+transactions_df = pd.read_csv(transactions_path)
+users_df = pd.read_csv(users_path)
+    
+#### identify date quality issues###
+def identify_data_issues(df, dataset_name):
+
+    # Check for data type
+    print(f"\n*****1:Checking data info in {dataset_name} *****")
+    print(df.head())
+    df.info()
+
+    # Define expected data types
+    varchar_cols = {'ID', 'STATE', 'LANGUAGE', 'GENDER', 'RECEIPT_ID', 'STORE_NAME', 'USER_ID'}
+    datetime_cols = {'CREATED_DATE', 'BIRTH_DATE', 'PURCHASE_DATE', 'SCAN_DATE'}
+    integer_cols = {'BARCODE'}
+    numeric_cols = {'FINAL_QUANTITY', 'FINAL_SALE'}
+
+    # Convert columns based on expected data types
+    for col in df.columns:
+        col_upper = col.upper()  # Ensure column name matches uppercase keys
+
+        if col_upper in varchar_cols:
+            df[col] = df[col].astype(str).str.strip()#Covert to string
+        elif col_upper in datetime_cols:
+            df[col] = pd.to_datetime(df[col], errors='coerce')  # Convert to datetime
+        elif col_upper in integer_cols:
+            df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype('int64')  # Convert to int64
+        elif col_upper in numeric_cols:
+            df[col] = pd.to_numeric(df[col], errors='coerce').astype('float64')  # Convert to numeric
+
+    print("\nConverted data types:")
+    print(df.dtypes)
+
+    # Check for missing values
+    print(f"\n*****2:Checking Missing Values in {dataset_name} *****")
+
+    missing_summary = {}
+    
+    for col in df.columns:
+        missing_count = df[col].isnull().sum()  # Standard NaN
+        none_count = (df[col].astype(str).str.lower() == "none").sum()  # "None" as string
+        space_count = (df[col].astype(str).str.strip() == "").sum()  # Empty strings
+        special_chars_count = df[col].astype(str).apply(lambda x: bool(re.match(r'^[^a-zA-Z0-9]*$', str(x)))).sum()  # Special chars only
+
+        if missing_count > 0 or none_count > 0 or space_count > 0 or special_chars_count > 0:
+            missing_summary[col] = {
+                "NaN (null)": missing_count,
+                '"None" (as string)': none_count,
+                "Blank (spaces)": space_count,
+                "Special characters": special_chars_count
+            }
+    
+    if missing_summary:
+        print("\n Missing Value Report:")
+        for col, details in missing_summary.items():
+            print(f" Column: {col}")
+            for issue_type, count in details.items():
+                if count > 0:
+                    print(f"   - {issue_type}: {count}")
+    else:
+        print("\n No missing values found.")
+
+    # Check for duplicate rows
+    print(f"\n*****3:Checking duplicate rows in {dataset_name} *****")
+    duplicate_counts = df[df.duplicated(keep=False)].groupby(df.columns.tolist()).size().reset_index(name="Duplicate_Count")
+
+    if not duplicate_counts.empty:
+        print(duplicate_counts)
+    else:
+        print(f"No duplicate rows found in {dataset_name}.")
+    
+
+    # Check if date columns follow a standard format.
+    print(f"\n*****4:Checking data standardization in {dataset_name} *****")
+
+    date_cols=df.select_dtypes(include=['datetime']).columns
+    for col in date_cols:
+        try:
+            df[col] = pd.to_datetime(df[col], errors='coerce')
+            invalid_dates = df[col].isnull().sum()
+            print(f"\nInvalid date entries in {dataset_name}.{col}: {invalid_dates}")
+        except Exception as e:
+            print(f"\nError processing {dataset_name}.{col}: {e}")
+
+    # Check if text columns have extra spaces.
+    text_cols = df.select_dtypes(include=['object']).columns
+    for col in text_cols:
+        extra_spaces = df[col].str.strip().ne(df[col]).sum()
+        if extra_spaces > 0:
+            print(f"\nExtra spaces found in {dataset_name}.{col}: {extra_spaces}")
+
+    # Check if text columns have consistent formatting (e.g., title case, lowercase).
+    text_cols = df.select_dtypes(include=['object']).columns
+    for col in text_cols:
+        sample_values = df[col].dropna().head(10).tolist()
+        print(f"\nSample values in {dataset_name}.{col}: {sample_values}")
+
+    # Check for negative values in numeric columns where it doesn’t make sense (e.g., prices, quantities).
+    numeric_cols = df.select_dtypes(include=['number']).columns
+    negative_values = {col: (df[col] < 0).sum() for col in numeric_cols if (df[col] < 0).sum() > 0}
+    
+    if negative_values:
+        print(f"\nNegative values detected in {dataset_name}:")
+        for col, count in negative_values.items():
+            print(f"{col}: {count} negative values")
+    else:
+        print(f"\nNo unexpected negative values found in {dataset_name}.")
+
+
+    # Detect outliers using the IQR method."""
+    numeric_cols = df.select_dtypes(include=['number'])
+    outlier_info = {}
+    
+    for col in numeric_cols:
+        Q1 = df[col].quantile(0.25)
+        Q3 = df[col].quantile(0.75)
+        IQR = Q3 - Q1
+        lower_bound = Q1 - 1.5 * IQR
+        upper_bound = Q3 + 1.5 * IQR
+        outliers = df[(df[col] < lower_bound) | (df[col] > upper_bound)]
+        
+        if not outliers.empty:
+            outlier_info[col] = len(outliers)
+    
+    if outlier_info:
+        print(f"\nOutliers detected in {dataset_name}:")
+        for col, count in outlier_info.items():
+            print(f"{col}: {count} outliers")
+    else:
+        print(f"\nNo significant outliers detected in {dataset_name}.")
+    
+    # Table summary
+    dfsummary=df.describe()
+    print(f"\n*****5: Table summary: {dataset_name}:{dfsummary} *****")
+
+    return df
+
+products_cleaned=identify_data_issues(products_df, "Products")
+transactions_cleaned=identify_data_issues(transactions_df, "Transactions")
+users_cleaned=identify_data_issues(users_df, "Users")
+
