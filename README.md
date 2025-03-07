@@ -1,2 +1,3 @@
 # Fetch-Rewards-Take-Home-Practice
-Fetch Rewards take home assessment for DA role
+This is Pei Zeng's Fetch Rewards take home assignment for DA role.
+
