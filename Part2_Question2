@@ -1,0 +1,24 @@
+-- Using RANK() to include ties, so multiple brands can share the same rank if total sales are equal.
+
+WITH Brand_sales AS (
+    SELECT
+        p.BRAND,
+        SUM(t.FINAL_SALE) AS total_sales
+    FROM TRANSACTIONS t
+    JOIN USERS u
+      ON t.USER_ID = u.ID
+    JOIN PRODUCTS p
+      ON t.BARCODE = p.BARCODE
+    WHERE DATEDIFF(month, u.CREATED_DATE, CURRENT_DATE()) >= 6
+---Eliminate null values in Final_sale and Brand--
+      AND t.FINAL_SALE IS NOT NULL
+      AND p.BRAND IS NOT NULL
+    GROUP BY p.BRAND
+)
+SELECT
+    BRAND,
+    total_sales,
+    RANK() OVER (ORDER BY total_sales DESC NULLS FIRST) AS sales_rank
+FROM Brand_sales
+QUALIFY sales_rank <= 5  -- filter top 5
+ORDER BY total_sales DESC;
