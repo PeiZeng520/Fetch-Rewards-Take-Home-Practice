@@ -1,0 +1,85 @@
+--Assume Fetch’s power users are defined based on the following dimensions:
+--1-	Frequency of purchases: how often the user makes purchases that captured via receipts. High purchase frequency indicates a habit of using Fetch for nearly every shopping trip.
+--2-	Number of receipts scanned: the total volume of receipts the user has scanned (or a monthly average). A power user will have a receipt count far above median. 
+--3-	Total points earned and points redeemed: this metric shows how a user is realizing value from Fetch.
+--4-	Referral activity: power users often share the app with friends and family.
+--5-	Engagement with promotions and special offers: number of offer impressions or clicks and offers redemption by user. Power users should have a high participation rate in these activities.
+--Key metrics for power user profiling:
+--1.	User usages and behavior: use duration; receipt scan frequency, etc.
+--2.	Consumer behavior: frequently visited store; frequently purchased items, etc.
+--3.	User demographics: Age, gender, region, etc.
+
+--Based on the data provided, we can query below
+---1: Identifies users with frequent scans (high transaction count, high number of unique scan dates).---
+---2: Measures long duration (based on account creation vs. latest purchase date).
+---3: Returns user information (demographics, creation date, etc.).
+---4: Finds the top store and top brand for each user (store or brand most frequently visited or purchased).
+
+---- Calculate summary metrics for each user------
+WITH poweruser_metrics AS (
+    SELECT
+        t.USER_ID,
+        COUNT(DISTINCT t.RECEIPT_ID) AS transaction_count,
+        SUM(t.FINAL_SALE) AS total_spent,
+        COUNT(DISTINCT t.SCAN_DATE) AS total_scans,
+        MIN(t.PURCHASE_DATE) AS first_purchase,
+        MAX(t.PURCHASE_DATE) AS last_purchase,
+        MAX(t.SCAN_DATE) AS latest_activity_date
+    FROM TRANSACTIONS t
+    GROUP BY t.USER_ID
+),
+
+-- Frequent vistied store for each user----------
+store_ranked AS (
+    SELECT
+        t.USER_ID,
+        t.STORE_NAME,
+        COUNT(*) AS store_count,
+        ROW_NUMBER() OVER (
+            PARTITION BY t.USER_ID
+            ORDER BY COUNT(*) DESC
+        ) AS store_rank
+    FROM TRANSACTIONS t
+    GROUP BY t.USER_ID, t.STORE_NAME
+),
+
+-- Frequent purchased item for each user ---
+brand_ranked AS (
+    SELECT
+        t.USER_ID,
+        p.BRAND,
+        COUNT(*) AS brand_count,
+        ROW_NUMBER() OVER (
+            PARTITION BY t.USER_ID
+            ORDER BY COUNT(*) DESC
+        ) AS brand_rank
+    FROM TRANSACTIONS t
+    LEFT JOIN products p
+      ON t.BARCODE = p.BARCODE
+    GROUP BY t.USER_ID, p.BRAND
+)
+
+SELECT
+    u.ID AS USER_ID,
+    u.CREATED_DATE,
+    u.BIRTH_DATE,
+    u.STATE,
+    u.LANGUAGE,
+    u.GENDER,
+    um.transaction_count,
+    um.total_spent,
+    um.total_scans,
+    DATEDIFF(day, um.first_purchase, um.last_purchase) AS active_days, -----Duration from first to last purchase
+    DATEDIFF(day, u.CREATED_DATE, um.latest_activity_date) AS membership_days, -----Duration from account creation to latest activity date
+    sr.STORE_NAME AS top_store,
+    br.BRAND AS top_brand
+FROM poweruser_metrics um
+JOIN USERS u
+  ON u.ID = um.USER_ID
+LEFT JOIN store_ranked sr
+       ON sr.USER_ID = um.USER_ID
+      AND sr.store_rank = 1
+LEFT JOIN brand_ranked br
+       ON br.USER_ID = um.USER_ID
+      AND br.brand_rank = 1
+ORDER BY um.transaction_count DESC ---- the sort can be changed depending on the certain metric that the business would like to examine the most.
