@@ -11,9 +11,9 @@ This is Pei Zeng's Fetch Rewards take home assignment for DA role.
    c. Who are Fetch’s power users? ---"Part2_Question3"
 *Please see the result for each query return in the attachment under "Comment".
 *Before analyzing the data, I performed below data cleaning steps by utilizing Python and Snowflake:
->Covert data types
->Drop & merge dulicates
->Deal with missing values
+-Covert data types
+-Drop & merge dulicates
+-Deal with missing values
 
 3. Part 3
    Communicate with non-tech stakeholders ---"Part3"
