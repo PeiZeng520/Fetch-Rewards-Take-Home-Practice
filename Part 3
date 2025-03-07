@@ -1,2 +1,42 @@
 ---Communicate with stakeholders--
---Please find the response in "Comment"
+--Please find the full response in "Comment"---
+
+To: stakeholders@fetch.com 
+Cc: pm@fetch.com; coworks@fetch.com 
+Subject: Addressing data quality issues and key insights from recent data analysis
+
+Hi Team,
+This email is for sharing a key insight from recent analysis regarding our Users, Transactions, and Products data. 
+If track user activities by time, we may observe possible seasonal patterns in certain months specific to Products.
+a.	As shown in below chart, we can see “Snacks” always has higher transaction count and scan count compared to other product, following with “Health &Wellness” products and “Beverages”.
+b.	 “Snacks” reaches its transaction peak in August, which increased 58% comparing to the transaction count in July. This might because 1, summer travel & outdoor activities which lead to higher snack consumption for convenient, on-the-go eating; 2, back to school season. Parents may stock up on snacks for kids’ lunchboxes and after-school treats.
+c.	Overall, we can see a consumer activity peak in July among all product categories. There is an 88% increase in Beverages and a 55% increase in Health & Wellness products. Several possible factors could explain this trend: 1, weather-driven purchases. Hot weather leads to increased purchases of cooling products like ice cream, cold drinks, sunscreen, and air conditioners; 2, summer vacation and holidays (July 4th); 3, summer sales and promotions; 4, increased summer event (sports/ movie blockbusters). 
+(this chart is created via Tableau desktop, and “Null” values in category 1 are eliminated),
+ 
+
+Based on this pattern, I would like to suggest taking the following activities during the season:
+1.	Boost engagement by aligning promotions with peak consumer spending.
+2.	Pattern with trending brands & retailers in July/ August.
+3.	Improve retention by launching seasonal challenges.
+Besides, I would like to address some data quality issues we identified during the process, which are impacting on the analysis and decision-making.
+Below is a summary of the issues:
+1. Inconsistent data type.
+  a. In "Transactions" data, "Final_quantity" and "Final_sale" columns are stored as "Text" instead of numeric. This will cause failure in calculating rewards points turnover based total sales per user.
+  b. Inconsistent data types also be seen in all date fields across the datasets, which will lead to misalign revenue trends and misleading conclusions about seasonal performance.
+2. Missing values.
+  a. 92% missing values in "Category_4" in Products data, 12% missing values in "Barcode" in Transactions data. This will impact data reliability and data mapping for analysis since Barcode should be considered as a primary identifier for a transaction.
+  b. more than 10% of missing entries in Birth date, state and language fields in Users. Due to demographic details (age, location, preferences) are missing, marketing campaigns may target the wrong audience or fail to personalize offers effectively.
+  c. "Final_sale" contains 12500 blank(space) records in Transactions, which can lead to incorrect KPI reporting. 
+3. Duplicate records.
+  a. Duplicates were found in Products and Transactions data. 
+  b. This will cause incorrect results when measuring transaction or product metrics such as transaction frequency, frequent visited store, etc. which lead to flawed segmentation and missed marketing opportunities 
+4. Unexpected values.
+  a. Negative values and 0 values are found in Barcode column. This should bring us attention to whether any bug existed regarding the receipt scan feature in the App which causes incorrect data input.
+  b. Unrealistic values in “Birth_date” (birth date is greater than 1920/01/01) which will not contribute to insight analysis.
+To ensure data analysis process efficiency and bring accurate insights, I would like to suggest:
+1.	Investigating if there are any bugs in data infrastructure which causing incorrect data input. Make sure there is a standard way to capture correct data at the point of input. For example, when a user scans a receipt with Fetch, we need to make sure the app correctly captures all information on the receipt with standard format.
+2.	Standardize data entry rules. Define and enforce consistent formats (e.g., always store dates as YYYY-MM-DD).
+3.	Automated process for data validation and cleaning on a weekly basis. If we add real-time validation rules for data input and run weekly checks to spot any data issues, we can reduce the chance of storing wrong information in the first place and fix any issues proactively.
+Please let me know if you’d like to discuss further with more details. 
+Regards
+Pei
